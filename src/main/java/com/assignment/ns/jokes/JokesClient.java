@@ -2,6 +2,7 @@ package com.assignment.ns.jokes;
 
 import com.assignment.ns.jokes.dto.request.JokesRequest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 
@@ -9,5 +10,5 @@ import org.springframework.web.service.annotation.HttpExchange;
 public interface JokesClient {
 
     @GetExchange
-    JokesRequest getJokes();
+    ResponseEntity<JokesRequest> getJokes();
 }

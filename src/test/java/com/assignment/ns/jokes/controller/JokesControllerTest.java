@@ -8,6 +8,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -61,7 +63,7 @@ class JokesControllerTest {
     @Test
     void test_getJoke_whenGet5xxResponse_thenThrowJokeInternalServerErrorException() {
 
-        Mockito.when(jokeClient.getJokes()).thenThrow(WebClientRequestException.class);
+        Mockito.when(jokeClient.getJokes()).thenThrow(WebClientResponseException.create(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Bad Request", HttpHeaders.EMPTY, null, null));
 
         webTestClient.get()
                 .uri("/api/v1/get-random-joke")
@@ -78,7 +80,7 @@ class JokesControllerTest {
     @Test
     void test_getJoke_whenGet4xxResponse_thenThrowJokeBadRequestException() {
 
-        Mockito.when(jokeClient.getJokes()).thenThrow(WebClientResponseException.class);
+        Mockito.when(jokeClient.getJokes()).thenThrow(WebClientResponseException.create(HttpStatus.BAD_REQUEST.value(), "Bad Request", HttpHeaders.EMPTY, null, null));
 
         webTestClient.get()
                 .uri("/api/v1/get-random-joke")

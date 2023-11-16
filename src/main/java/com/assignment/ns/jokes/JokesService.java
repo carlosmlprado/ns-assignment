@@ -6,10 +6,13 @@ import com.assignment.ns.jokes.dto.response.JokeResponse;
 import com.assignment.ns.jokes.exceptions.JokeBadRequestException;
 import com.assignment.ns.jokes.exceptions.JokeInternalServerErrorException;
 import com.assignment.ns.jokes.exceptions.JokeNotFoundException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -22,27 +25,25 @@ import java.util.function.Predicate;
 public class JokesService {
     private final JokesClient jokeClient;
 
+    @CircuitBreaker(name = "callbackRandomJoke", fallbackMethod = "fallbackRandomJoke")
     public JokeResponse getJoke() {
-        JokesRequest jokeResponse;
+        ResponseEntity<JokesRequest> jokeResponse;
 
-        try {
-            log.info("Calling jokes api...");
-            jokeResponse = jokeClient.getJokes();
+        log.info("Calling jokes api...");
+        jokeResponse = jokeClient.getJokes();
 
-        } catch (WebClientRequestException e) {
-            log.error("Error calling jokes api due server error: {}", e.getMessage());
-            throw new JokeInternalServerErrorException();
-        } catch (WebClientResponseException e) {
-            log.error("Error calling jokes api due client error: {}", e.getMessage());
+        if (jokeResponse.getStatusCode().is4xxClientError()) {
             throw new JokeBadRequestException();
+        } else if (jokeResponse.getStatusCode().is5xxServerError()) {
+            throw new JokeInternalServerErrorException();
         }
 
-        if (ObjectUtils.isEmpty(jokeResponse.jokes())) {
+        if (!ObjectUtils.isEmpty(jokeResponse.getBody()) && !ObjectUtils.isEmpty(jokeResponse.getBody().jokes())) {
+            log.debug("Response from jokes api: {}", jokeResponse.getBody().jokes());
+            return filterResponse(jokeResponse.getBody().jokes());
+        } else {
             throw new JokeNotFoundException();
         }
-
-        log.debug("Response from jokes api: {}", jokeResponse.jokes());
-        return filterResponse(jokeResponse.jokes());
     }
 
     private JokeResponse filterResponse(List<Joke> list) {
@@ -59,8 +60,13 @@ public class JokesService {
     }
 
     private Predicate<Joke> buildPredicateToFilterJokes() {
-        Predicate<Joke> predicate = j -> Boolean.FALSE.equals(j.flags().explicit())
-                && Boolean.FALSE.equals(j.flags().sexist()) && Boolean.TRUE.equals(j.safe() && !ObjectUtils.isEmpty(j.joke()));
-        return predicate;
+        return j -> Boolean.FALSE.equals(j.flags().explicit())
+                && Boolean.FALSE.equals(j.flags().sexist()) && Boolean.TRUE.equals(j.safe()) && !ObjectUtils.isEmpty(j.joke());
+    }
+
+    @SuppressWarnings("unused")
+    private JokeResponse fallbackRandomJoke(Throwable e) {
+        log.error("Error calling jokes api: {}", e.getMessage());
+        throw new JokeInternalServerErrorException();
     }
 }

@@ -14,10 +14,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
 
 import static org.mockito.Mockito.*;
 
+@SpringBootTest
 public class JokesServiceTest {
 
     JokesClient jokeClient;
@@ -31,7 +34,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_ThenReturn_SmallestOne_and_SafeNotExplicitNotSexist() {
-        JokesRequest jokesRequest = new JokesRequest(buildDummyJokesListWithJokes());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(buildDummyJokesListWithJokes()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         var response = jokesService.getJoke();
@@ -41,7 +44,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_withNoSafeOne_ThenReturn_EmptyObject() {
-        JokesRequest jokesRequest = new JokesRequest(buildDummyJokesListWithJokesAndNoneIsSafe());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(buildDummyJokesListWithJokesAndNoneIsSafe()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         Assert.assertThrows(JokeNotFoundException.class, () -> jokesService.getJoke());
@@ -49,7 +52,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_withAllSexist_ThenThrow_JokeNotFoundException() {
-        JokesRequest jokesRequest = new JokesRequest(buildDummyJokesListWithJokesAndAllAreSexist());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(buildDummyJokesListWithJokesAndAllAreSexist()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         Assert.assertThrows(JokeNotFoundException.class, () -> jokesService.getJoke());
@@ -57,7 +60,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_withAllExplicit_ThenThrow_JokeNotFoundException() {
-        JokesRequest jokesRequest = new JokesRequest(buildDummyJokesListWithJokesAndAllAreExplicit());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(buildDummyJokesListWithJokesAndAllAreExplicit()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         Assert.assertThrows(JokeNotFoundException.class, () -> jokesService.getJoke());
@@ -65,7 +68,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_and_ReturnEmptyList_thenThrow_JokeNotFoundException() {
-        JokesRequest jokesRequest = new JokesRequest(new ArrayList<>());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(new ArrayList<>()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         Assert.assertThrows(JokeNotFoundException.class, () -> jokesService.getJoke());
@@ -73,7 +76,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_and_ReturnEmptyJokes_thenThrow_JokeNotFoundException() {
-        JokesRequest jokesRequest = new JokesRequest(buildDummyJokesListWithEmptyJokes());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(buildDummyJokesListWithEmptyJokes()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         Assert.assertThrows(JokeNotFoundException.class, () -> jokesService.getJoke());
@@ -81,7 +84,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_and_ReturnEqualLengthJokes_thenReturn_FirstOne() {
-        JokesRequest jokesRequest = new JokesRequest(buildDummyJokesListWithJokesWithSameLength());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(buildDummyJokesListWithJokesWithSameLength()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         Assert.assertEquals(jokesService.getJoke().randomJoke(), "This is dummy 1.");
@@ -89,7 +92,7 @@ public class JokesServiceTest {
 
     @Test
     public void when_getRandomJoke_withAllNotSafe_ThenThrow_JokeNotFoundException() {
-        JokesRequest jokesRequest = new JokesRequest(buildDummyJokesListWithJokesAndAllNotSafe());
+        ResponseEntity<JokesRequest> jokesRequest = ResponseEntity.ok(new JokesRequest(buildDummyJokesListWithJokesAndAllNotSafe()));
         when(jokeClient.getJokes()).thenReturn(jokesRequest);
 
         Assert.assertThrows(JokeNotFoundException.class, () -> jokesService.getJoke());

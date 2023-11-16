@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.support.WebClientAdapter
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import reactor.core.publisher.Mono;
 
+
 @Configuration
 public class JokesClientConfig {
 
@@ -20,10 +21,11 @@ public class JokesClientConfig {
                 .baseUrl(jokeProperties.getUri())
                 .defaultStatusHandler(
                         httpStatusCode -> HttpStatus.NOT_FOUND == httpStatusCode,
-                        response -> Mono.error(new JokeNotFoundException()))
+                        response -> Mono.just(new JokeNotFoundException()))
                 .defaultStatusHandler(
                         HttpStatusCode::is5xxServerError,
-                        response -> Mono.error(new JokeInternalServerErrorException()))
+                        response -> Mono.just(new JokeInternalServerErrorException())
+                )
                 .build();
 
         return HttpServiceProxyFactory
@@ -31,4 +33,5 @@ public class JokesClientConfig {
                 .build()
                 .createClient(JokesClient.class);
     }
+
 }
